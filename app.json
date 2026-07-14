@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "EleveseTech",
+    "slug": "EleveseTech",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "elevesetech",
+    "owner": "orlax1s",
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "EleveseTech necesita acceso a tus fotos para los reportes.",
+          "cameraPermission": "EleveseTech necesita acceso a la cámara para capturar fotos de elevadores."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "EleveseTech necesita acceso a la cámara."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "EleveseTech necesita tu ubicación para geolocalizar la firma."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.elevese.tech",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ab2822cf-a703-43ea-a6b9-bdaa62664381"
+      }
+    }
+  }
+}

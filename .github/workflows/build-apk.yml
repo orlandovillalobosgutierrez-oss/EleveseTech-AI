@@ -1,0 +1,57 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: # Permite lanzar build manual desde GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: 📦 Instalar dependencias
+        run: npm ci
+
+      - name: 🏗️ Setup JDK 17 (para Android SDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🚀 Build APK con EAS (local)
+        run: npx eas build --platform android --profile preview --local --output=app-release.apk
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📤 Subir APK como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EleveseTech-APK
+          path: app-release.apk
+          retention-days: 30
+
+      - name: 🏷️ Crear Release (opcional, en pushes a main)
+        if: github.ref_name == 'main' || github.ref_name == 'master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Build #${{ github.run_number }}"
+          files: app-release.apk
+          generate_release_notes: true
