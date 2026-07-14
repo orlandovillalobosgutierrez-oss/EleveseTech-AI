@@ -9,45 +9,28 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: npm
 
-      - name: 📦 Instalar dependencias
-        run: npm ci
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
 
-      - name: 🔑 Crear .env con API key dummy
-        run: echo "EXPO_PUBLIC_GEMINI_API_KEY=dummy" > .env
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
 
-      - name: 🚀 Build APK (EAS Cloud)
+      - name: Build APK via EAS
         run: npx eas build --platform android --profile preview --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 📥 Descargar APK del build
-        run: |
-          BUILD_ID=$(npx eas build:list --platform android --limit 1 --status finished --json 2>/dev/null | python3 -c "import json,sys; builds=json.load(sys.stdin); print(builds[0]['id'])")
-          echo "Build ID: $BUILD_ID"
-          npx eas build:download --platform android --id="$BUILD_ID" --output=app-release.apk
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: 📤 Subir APK como artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: EleveseTech-APK
-          path: app-release.apk
+          path: "*.apk"
           retention-days: 30
-
-      - name: 🏷️ Crear Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-${{ github.run_number }}
-          name: "Build #${{ github.run_number }}"
-          files: app-release.apk
-          generate_release_notes: true
