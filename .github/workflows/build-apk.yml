@@ -2,19 +2,14 @@ name: Build APK
 
 on:
   push:
-    branches: [main, master, develop]
-  pull_request:
-    branches: [main, master]
-  workflow_dispatch: # Permite lanzar build manual desde GitHub
+    branches: [master]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
-      - name: 📥 Checkout repositorio
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🔧 Setup Node.js
@@ -26,17 +21,19 @@ jobs:
       - name: 📦 Instalar dependencias
         run: npm ci
 
-      - name: 🏗️ Setup JDK 17 (para Android SDK)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+      - name: 🔑 Crear .env con API key dummy
+        run: echo "EXPO_PUBLIC_GEMINI_API_KEY=dummy" > .env
 
-      - name: 🤖 Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: 🚀 Build APK (EAS Cloud)
+        run: npx eas build --platform android --profile preview --non-interactive --wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 🚀 Build APK con EAS (local)
-        run: npx eas build --platform android --profile preview --local --output=app-release.apk
+      - name: 📥 Descargar APK del build
+        run: |
+          BUILD_ID=$(npx eas build:list --platform android --limit 1 --status finished --json 2>/dev/null | python3 -c "import json,sys; builds=json.load(sys.stdin); print(builds[0]['id'])")
+          echo "Build ID: $BUILD_ID"
+          npx eas build:download --platform android --id="$BUILD_ID" --output=app-release.apk
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -47,8 +44,7 @@ jobs:
           path: app-release.apk
           retention-days: 30
 
-      - name: 🏷️ Crear Release (opcional, en pushes a main)
-        if: github.ref_name == 'main' || github.ref_name == 'master'
+      - name: 🏷️ Crear Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
