@@ -26,20 +26,23 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
+      - name: Install npm dependencies
+        run: npm ci
+        timeout-minutes: 10
 
-      - name: Build APK via EAS local
-        run: npx eas build --platform android --profile preview --local --output=app-release.apk
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_PUBLIC_GEMINI_API_KEY: dummy
+      - name: Prebuild Android project
+        run: npx expo prebuild --platform android
+        timeout-minutes: 5
 
-      - name: Upload APK artifact
+      - name: Build APK with Gradle
+        run: cd android && ./gradlew assembleRelease
+        timeout-minutes: 30
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: EleveseTech-APK
-          path: app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 
       - name: Create Release
@@ -47,5 +50,5 @@ jobs:
         with:
           tag_name: build-${{ github.run_number }}
           name: "Build #${{ github.run_number }}"
-          files: app-release.apk
+          files: android/app/build/outputs/apk/release/app-release.apk
           generate_release_notes: true
